@@ -76,6 +76,7 @@ export type Event =
   | EventPtyDeleted
   | EventInstallationUpdated
   | EventInstallationUpdateAvailable
+  | EventProjectPathsUpdated
   | EventServerConnected
   | EventGlobalDisposed
   | EventAccountAdded
@@ -1399,6 +1400,13 @@ export type GlobalEvent = {
         type: "installation.update-available"
         properties: {
           version: string
+        }
+      }
+    | {
+        id: string
+        type: "project.paths.updated"
+        properties: {
+          projectID: string
         }
       }
     | {
@@ -3335,6 +3343,20 @@ export type ConfigV2ExperimentalPolicy = {
   resource: string
 }
 
+export type ProjectPaths = Array<{
+  path: string
+  primary: boolean
+}>
+
+export type ProjectCopyStrategyInfo = {
+  id: "git_worktree"
+  name: string
+}
+
+export type ProjectCopyCopy = {
+  path: string
+}
+
 export type SessionInfo = {
   id: string
   parentID?: string
@@ -4454,6 +4476,14 @@ export type EventInstallationUpdateAvailable = {
   type: "installation.update-available"
   properties: {
     version: string
+  }
+}
+
+export type EventProjectPathsUpdated = {
+  id: string
+  type: "project.paths.updated"
+  properties: {
+    projectID: string
   }
 }
 
@@ -6152,6 +6182,164 @@ export type ProjectUpdateResponses = {
 }
 
 export type ProjectUpdateResponse = ProjectUpdateResponses[keyof ProjectUpdateResponses]
+
+export type ProjectPathsData = {
+  body?: never
+  path: {
+    projectID: string
+  }
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/project/{projectID}/paths"
+}
+
+export type ProjectPathsErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type ProjectPathsError = ProjectPathsErrors[keyof ProjectPathsErrors]
+
+export type ProjectPathsResponses = {
+  /**
+   * Project paths
+   */
+  200: ProjectPaths
+}
+
+export type ProjectPathsResponse = ProjectPathsResponses[keyof ProjectPathsResponses]
+
+export type ProjectCopyStrategiesData = {
+  body?: never
+  path: {
+    projectID: string
+  }
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/project/{projectID}/copy/strategy"
+}
+
+export type ProjectCopyStrategiesErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type ProjectCopyStrategiesError = ProjectCopyStrategiesErrors[keyof ProjectCopyStrategiesErrors]
+
+export type ProjectCopyStrategiesResponses = {
+  /**
+   * Project copy strategies
+   */
+  200: Array<ProjectCopyStrategyInfo>
+}
+
+export type ProjectCopyStrategiesResponse = ProjectCopyStrategiesResponses[keyof ProjectCopyStrategiesResponses]
+
+export type ProjectCopyRemoveData = {
+  body?: {
+    strategy: "git_worktree"
+    path: string
+  }
+  path: {
+    projectID: string
+  }
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/project/{projectID}/copy"
+}
+
+export type ProjectCopyRemoveErrors = {
+  /**
+   * BadRequest | InvalidRequestError
+   */
+  400: EffectHttpApiErrorBadRequest | InvalidRequestError
+}
+
+export type ProjectCopyRemoveError = ProjectCopyRemoveErrors[keyof ProjectCopyRemoveErrors]
+
+export type ProjectCopyRemoveResponses = {
+  /**
+   * Project copy removed
+   */
+  204: void
+}
+
+export type ProjectCopyRemoveResponse = ProjectCopyRemoveResponses[keyof ProjectCopyRemoveResponses]
+
+export type ProjectCopyCreateData = {
+  body?: {
+    strategy: "git_worktree"
+    path: string
+  }
+  path: {
+    projectID: string
+  }
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/project/{projectID}/copy"
+}
+
+export type ProjectCopyCreateErrors = {
+  /**
+   * BadRequest | InvalidRequestError
+   */
+  400: EffectHttpApiErrorBadRequest | InvalidRequestError
+}
+
+export type ProjectCopyCreateError = ProjectCopyCreateErrors[keyof ProjectCopyCreateErrors]
+
+export type ProjectCopyCreateResponses = {
+  /**
+   * Project copy created
+   */
+  200: ProjectCopyCopy
+}
+
+export type ProjectCopyCreateResponse = ProjectCopyCreateResponses[keyof ProjectCopyCreateResponses]
+
+export type ProjectCopyRefreshData = {
+  body?: {
+    strategy?: "git_worktree"
+  }
+  path: {
+    projectID: string
+  }
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/project/{projectID}/copy/refresh"
+}
+
+export type ProjectCopyRefreshErrors = {
+  /**
+   * BadRequest | InvalidRequestError
+   */
+  400: EffectHttpApiErrorBadRequest | InvalidRequestError
+}
+
+export type ProjectCopyRefreshError = ProjectCopyRefreshErrors[keyof ProjectCopyRefreshErrors]
+
+export type ProjectCopyRefreshResponses = {
+  /**
+   * Project copies refreshed
+   */
+  204: void
+}
+
+export type ProjectCopyRefreshResponse = ProjectCopyRefreshResponses[keyof ProjectCopyRefreshResponses]
 
 export type PtyShellsData = {
   body?: never
