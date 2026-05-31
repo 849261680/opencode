@@ -1,6 +1,7 @@
 import { and, eq, sql } from "drizzle-orm"
 import { Database } from "@opencode-ai/core/database/database"
 import { ProjectTable } from "@opencode-ai/core/project/sql"
+import { ProjectPathTable } from "@opencode-ai/core/project/path.sql"
 import { PermissionTable, SessionTable } from "@opencode-ai/core/session/sql"
 import { WorkspaceTable } from "@opencode-ai/core/control-plane/workspace.sql"
 import * as Log from "@opencode-ai/core/util/log"
@@ -249,6 +250,56 @@ export const layer = Layer.effect(
         .pipe(Effect.orDie)
     })
 
+    const rememberProjectPath = Effect.fn("Project.rememberProjectPath")(function* (input: {
+      projectID: ProjectV2.ID
+      path: string
+    }) {
+      if (input.projectID === ProjectV2.ID.global) return
+
+      yield* db
+        .transaction(
+          (d) =>
+            Effect.gen(function* () {
+              const existing = yield* d
+                .select()
+                .from(ProjectPathTable)
+                .where(and(eq(ProjectPathTable.project_id, input.projectID), eq(ProjectPathTable.path, input.path)))
+                .get()
+              const primary = yield* d
+                .select({ path: ProjectPathTable.path })
+                .from(ProjectPathTable)
+                .where(and(eq(ProjectPathTable.project_id, input.projectID), eq(ProjectPathTable.primary, true)))
+                .get()
+
+              if (existing) {
+                if (!primary) {
+                  yield* d
+                    .update(ProjectPathTable)
+                    .set({ primary: true })
+                    .where(and(eq(ProjectPathTable.project_id, input.projectID), eq(ProjectPathTable.path, input.path)))
+                    .run()
+                }
+                return
+              }
+
+              yield* d
+                .insert(ProjectPathTable)
+                .values({
+                  path: input.path,
+                  primary: !primary,
+                  project_id: input.projectID,
+                })
+                .run()
+            }),
+          { behavior: "immediate" },
+        )
+        .pipe(
+          Effect.catchCause((cause) =>
+            Effect.sync(() => log.warn("project path persistence failed", { projectID: input.projectID, cause })),
+          ),
+        )
+    })
+
     const fromDirectory = Effect.fn("Project.fromDirectory")(function* (directory: string) {
       log.info("fromDirectory", { directory })
 
@@ -335,6 +386,11 @@ export const layer = Layer.effect(
           .run()
           .pipe(Effect.orDie)
       }
+
+      yield* rememberProjectPath({
+        projectID,
+        path: data.directory,
+      })
 
       yield* emitUpdated(result)
       if (projectID !== ProjectV2.ID.global && data.vcs?.type === "git") {
