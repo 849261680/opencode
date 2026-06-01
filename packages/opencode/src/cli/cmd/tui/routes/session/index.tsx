@@ -2235,11 +2235,7 @@ function Task(props: ToolProps<typeof TaskTool>) {
     }
 
     if (!isRunning() && props.part.state.status === "completed") {
-      content.push(
-        props.metadata.background === true
-          ? `↳ ${tools().length} toolcalls`
-          : `↳ ${tools().length} toolcalls · ${Locale.duration(duration())}`,
-      )
+      content.push(`↳ ${tools().length} toolcalls · ${Locale.duration(duration())}`)
     }
 
     return content.join("\n")
