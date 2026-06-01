@@ -86,16 +86,16 @@ function Fixture(props: { errorExpanded?: boolean; before?: "shell" | "user" }) 
   )
 }
 
-function TaskGroupFixture() {
+function SubagentGroupFixture() {
   return (
     <box flexDirection="column" width={72}>
       <InlineToolRow id="tool-inline-before" icon="✱" complete={true} pending="">
         Grep "Task" (2 matches)
       </InlineToolRow>
-      <InlineToolRow id="tool-inline-task-one" icon="⠙" complete={true} pending="" task={true}>
+      <InlineToolRow id="tool-inline-subagent-one" icon="⠙" complete={true} pending="" subagent={true}>
         Explore Task — Inspect active task spacing
       </InlineToolRow>
-      <InlineToolRow id="tool-inline-task-two" icon="✓" complete={true} pending="" task={true}>
+      <InlineToolRow id="tool-inline-subagent-two" icon="✓" complete={true} pending="" subagent={true}>
         {"General Task — Confirm completed task spacing\n↳ 1 toolcall · 501ms"}
       </InlineToolRow>
       <InlineToolRow id="tool-inline-after" icon="→" complete={true} pending="">
@@ -105,7 +105,7 @@ function TaskGroupFixture() {
   )
 }
 
-function LoadedReadBeforeTaskFixture() {
+function LoadedReadBeforeSubagentFixture() {
   return (
     <box flexDirection="column" width={72}>
       <InlineToolRow id="tool-inline-read" icon="→" complete={true} pending="">
@@ -114,7 +114,7 @@ function LoadedReadBeforeTaskFixture() {
       <box id="tool-inline-loaded-read-child" paddingLeft={3}>
         <text paddingLeft={3}>↳ Loaded src/cli/cmd/tui/routes/session/tools.tsx</text>
       </box>
-      <InlineToolRow id="tool-inline-task-after-read" icon="✓" complete={true} pending="" task={true}>
+      <InlineToolRow id="tool-inline-subagent-after-read" icon="✓" complete={true} pending="" subagent={true}>
         {"Explore Task — Inspect active task spacing\n↳ 1 toolcall · 501ms"}
       </InlineToolRow>
     </box>
@@ -152,11 +152,11 @@ describe("TUI inline tool wrapping", () => {
     expect(await renderFrame(() => <Fixture before="user" />, { width: 72, height: 14 })).toMatchSnapshot()
   })
 
-  test("separates a contiguous task group from inline tools", async () => {
-    expect(await renderFrame(() => <TaskGroupFixture />, { width: 72, height: 10 })).toMatchSnapshot()
+  test("separates a contiguous subagent group from inline tools", async () => {
+    expect(await renderFrame(() => <SubagentGroupFixture />, { width: 72, height: 10 })).toMatchSnapshot()
   })
 
-  test("separates a task group after an expanded read", async () => {
-    expect(await renderFrame(() => <LoadedReadBeforeTaskFixture />, { width: 72, height: 8 })).toMatchSnapshot()
+  test("separates a subagent group after an expanded read", async () => {
+    expect(await renderFrame(() => <LoadedReadBeforeSubagentFixture />, { width: 72, height: 8 })).toMatchSnapshot()
   })
 })

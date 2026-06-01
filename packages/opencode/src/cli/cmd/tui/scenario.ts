@@ -190,7 +190,7 @@ export function createScenario(input: { name: Name; directory: string; fetch: ty
         case "/provider/auth":
           return json({})
         case "/session/status":
-          return json({ [childID]: { type: "busy" }, [completedChildID]: { type: "idle" } })
+          return json({ [childID]: { type: "busy" } })
         case "/config/providers":
           return json({ providers, default: { scenario: "scenario" } })
         case "/experimental/console":

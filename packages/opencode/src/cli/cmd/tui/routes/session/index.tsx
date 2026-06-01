@@ -1789,7 +1789,7 @@ function InlineTool(props: {
   complete: any
   pending: string
   spinner?: boolean
-  task?: boolean
+  subagent?: boolean
   children: JSX.Element
   part: ToolPart
   onClick?: () => void
@@ -1830,7 +1830,7 @@ function InlineTool(props: {
 
   return (
     <InlineToolRow
-      id={`tool-inline-${props.task ? "task-" : ""}${props.part.id}`}
+      id={`tool-inline-${props.subagent ? "subagent-" : ""}${props.part.id}`}
       icon={props.icon}
       iconColor={props.iconColor}
       color={fg()}
@@ -1842,7 +1842,7 @@ function InlineTool(props: {
       complete={props.complete}
       pending={props.pending}
       spinner={props.spinner}
-      task={props.task}
+      subagent={props.subagent}
       separateAfter={(id) =>
         sync.data.message[ctx.sessionID]?.some((message) => message.role === "user" && message.id === id) ?? false
       }
@@ -1875,7 +1875,7 @@ export function InlineToolRow(props: {
   complete: any
   pending: string
   spinner?: boolean
-  task?: boolean
+  subagent?: boolean
   children: JSX.Element
   separateAfter?: (id: string | undefined) => boolean
   onMouseOver?: () => void
@@ -1902,11 +1902,11 @@ export function InlineToolRow(props: {
         const index = children.indexOf(el)
         const previous = children[index - 1]
         const previousInline = previous?.id.startsWith("tool-inline-") ?? false
-        const previousTask = previous?.id.startsWith("tool-inline-task-") ?? false
+        const previousSubagent = previous?.id.startsWith("tool-inline-subagent-") ?? false
         setMargin(
           previous?.id.startsWith("text-") ||
             previous?.id.startsWith("tool-block-") ||
-            (previousInline && previousTask !== Boolean(props.task)) ||
+            (previousInline && previousSubagent !== Boolean(props.subagent)) ||
             props.separateAfter?.(previous?.id)
             ? 1
             : 0,
@@ -2201,7 +2201,7 @@ function Task(props: ToolProps<typeof TaskTool>) {
 
   const status = createMemo(() => sync.data.session_status[props.metadata.sessionId ?? ""])
   const isRunning = createMemo(
-    () => props.part.state.status === "running" || (props.metadata.background === true && status()?.type !== "idle"),
+    () => props.part.state.status === "running" || (props.metadata.background === true && status() !== undefined),
   )
   const retry = createMemo(() => {
     const value = status()
@@ -2244,7 +2244,7 @@ function Task(props: ToolProps<typeof TaskTool>) {
   return (
     <InlineTool
       icon={props.part.state.status === "completed" ? "✓" : "│"}
-      task={true}
+      subagent={true}
       color={retry() ? theme.error : undefined}
       spinner={isRunning()}
       complete={props.input.description}
