@@ -96,7 +96,7 @@ function TaskGroupFixture() {
         Explore Task — Inspect active task spacing
       </InlineToolRow>
       <InlineToolRow id="tool-inline-task-two" icon="✓" complete={true} pending="" task={true}>
-        General Task — Confirm completed task spacing
+        {"General Task — Confirm completed task spacing\n↳ 1 toolcall · 501ms"}
       </InlineToolRow>
       <InlineToolRow id="tool-inline-after" icon="→" complete={true} pending="">
         Read src/cli/cmd/tui/routes/session/index.tsx
@@ -115,7 +115,7 @@ function LoadedReadBeforeTaskFixture() {
         <text paddingLeft={3}>↳ Loaded src/cli/cmd/tui/routes/session/tools.tsx</text>
       </box>
       <InlineToolRow id="tool-inline-task-after-read" icon="✓" complete={true} pending="" task={true}>
-        Explore Task — Inspect active task spacing
+        {"Explore Task — Inspect active task spacing\n↳ 1 toolcall · 501ms"}
       </InlineToolRow>
     </box>
   )

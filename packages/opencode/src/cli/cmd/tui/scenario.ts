@@ -26,6 +26,7 @@ export function createScenario(input: { name: Name; directory: string; fetch: ty
     transcript: input.name === "subagents" ? subagents(sessionID, created) : toolsMixed(sessionID, created),
   }
   const childID = `${sessionID}_child`
+  const completedChildID = `${sessionID}_completed_child`
   const child = {
     session: { ...session(childID, input.directory, input.name, created), parentID: sessionID },
     transcript: [
@@ -45,6 +46,33 @@ export function createScenario(input: { name: Name; directory: string; fetch: ty
               { filePath: "src/cli/cmd/tui/routes/session/index.tsx" },
               "src/cli/cmd/tui/routes/session/index.tsx",
             ),
+          ),
+        ],
+      },
+    ],
+  }
+  const completedChild = {
+    session: { ...session(completedChildID, input.directory, input.name, created), parentID: sessionID },
+    transcript: [
+      {
+        info: userMessage(completedChildID, "msg_completed_child_user", created),
+        parts: [text(completedChildID, "msg_completed_child_user", "part_completed_child_user", "Review result.")],
+      },
+      {
+        info: assistantMessage(
+          completedChildID,
+          "msg_completed_child_assistant",
+          "msg_completed_child_user",
+          created + 1,
+          true,
+        ),
+        parts: [
+          tool(
+            completedChildID,
+            "msg_completed_child_assistant",
+            "part_completed_child_read",
+            "read",
+            completed({ filePath: "src/cli/cmd/tui/routes/session/index.tsx" }, {}, "Read session renderer"),
           ),
         ],
       },
@@ -120,6 +148,14 @@ export function createScenario(input: { name: Name; directory: string; fetch: ty
       if (
         request.method === "GET" &&
         (pathname === `/session/${childID}/todo` || pathname === `/session/${childID}/diff`)
+      )
+        return json([])
+      if (request.method === "GET" && pathname === `/session/${completedChildID}`) return json(completedChild.session)
+      if (request.method === "GET" && pathname === `/session/${completedChildID}/message`)
+        return json(completedChild.transcript)
+      if (
+        request.method === "GET" &&
+        (pathname === `/session/${completedChildID}/todo` || pathname === `/session/${completedChildID}/diff`)
       )
         return json([])
       if (request.method === "POST" && pathname === `${base}/message`) {
@@ -343,13 +379,21 @@ function subagents(sessionID: string, time: number): Transcript {
       "part_01_intro",
       "These completed task rows are intentionally adjacent so task spacing changes are immediately visible.",
     ),
-    task(sessionID, "msg_01_assistant", "part_02_task", "Explore renderer history for task-row regressions", false),
+    task(
+      sessionID,
+      "msg_01_assistant",
+      "part_02_task",
+      "Explore renderer history for task-row regressions",
+      false,
+      `${sessionID}_completed_child`,
+    ),
     task(
       sessionID,
       "msg_01_assistant",
       "part_03_task",
       "Compare spacing around long wrapped delegation summaries",
       true,
+      `${sessionID}_completed_child`,
     ),
     task(
       sessionID,
@@ -357,6 +401,7 @@ function subagents(sessionID: string, time: number): Transcript {
       "part_04_task",
       "Audit parallel subagent presentation and footer affordances",
       true,
+      `${sessionID}_completed_child`,
     ),
     text(
       sessionID,
@@ -421,8 +466,22 @@ function responseParts(sessionID: string, messageID: string, prompt: string): Pa
           { sessionId: `${sessionID}_child` },
         ),
       ),
-      task(sessionID, messageID, `${messageID}_04_task`, "Compare completed task separators after reads", false),
-      task(sessionID, messageID, `${messageID}_05_task`, "Confirm completed agent presentation", true),
+      task(
+        sessionID,
+        messageID,
+        `${messageID}_04_task`,
+        "Compare completed task separators after reads",
+        false,
+        `${sessionID}_completed_child`,
+      ),
+      task(
+        sessionID,
+        messageID,
+        `${messageID}_05_task`,
+        "Confirm completed agent presentation",
+        true,
+        `${sessionID}_completed_child`,
+      ),
       tool(
         sessionID,
         messageID,
@@ -441,7 +500,14 @@ function responseParts(sessionID: string, messageID: string, prompt: string): Pa
           { sessionId: `${sessionID}_child` },
         ),
       ),
-      task(sessionID, messageID, `${messageID}_08_task`, "Confirm secondary completed agent presentation", false),
+      task(
+        sessionID,
+        messageID,
+        `${messageID}_08_task`,
+        "Confirm secondary completed agent presentation",
+        false,
+        `${sessionID}_completed_child`,
+      ),
       tool(
         sessionID,
         messageID,
@@ -458,9 +524,30 @@ function responseParts(sessionID: string, messageID: string, prompt: string): Pa
   if (/parallel|subagent|task/i.test(prompt)) {
     return [
       text(sessionID, messageID, `${messageID}_01_text`, "Three delegated investigations returned concurrently:"),
-      task(sessionID, messageID, `${messageID}_02_task`, "Review layout behavior in the session renderer", false),
-      task(sessionID, messageID, `${messageID}_03_task`, "Audit wrapping behavior for long task summaries", true),
-      task(sessionID, messageID, `${messageID}_04_task`, "Check task spacing against inline tool density", true),
+      task(
+        sessionID,
+        messageID,
+        `${messageID}_02_task`,
+        "Review layout behavior in the session renderer",
+        false,
+        `${sessionID}_completed_child`,
+      ),
+      task(
+        sessionID,
+        messageID,
+        `${messageID}_03_task`,
+        "Audit wrapping behavior for long task summaries",
+        true,
+        `${sessionID}_completed_child`,
+      ),
+      task(
+        sessionID,
+        messageID,
+        `${messageID}_04_task`,
+        "Check task spacing against inline tool density",
+        true,
+        `${sessionID}_completed_child`,
+      ),
     ]
   }
   if (/block|diff|edit/i.test(prompt)) {
@@ -594,13 +681,24 @@ function text(sessionID: string, messageID: string, id: string, value: string): 
   return { id, sessionID, messageID, type: "text", text: value }
 }
 
-function task(sessionID: string, messageID: string, id: string, description: string, background: boolean) {
+function task(
+  sessionID: string,
+  messageID: string,
+  id: string,
+  description: string,
+  background: boolean,
+  childSessionID?: string,
+) {
   return tool(
     sessionID,
     messageID,
     id,
     "task",
-    completed({ description, subagent_type: "explore" }, { background }, description),
+    completed(
+      { description, subagent_type: "explore" },
+      { background, ...(childSessionID ? { sessionId: childSessionID } : {}) },
+      description,
+    ),
   )
 }
 

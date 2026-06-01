@@ -58,6 +58,7 @@ exports[`TUI inline tool wrapping separates a contiguous task group from inline 
 
    ⠙ Explore Task — Inspect active task spacing
    ✓ General Task — Confirm completed task spacing
+     ↳ 1 toolcall · 501ms
 
    → Read src/cli/cmd/tui/routes/session/index.tsx"
 `;
@@ -66,5 +67,6 @@ exports[`TUI inline tool wrapping separates a task group after an expanded read 
 "   → Read src/cli/cmd/tui/routes/session/index.tsx
    ↳ Loaded src/cli/cmd/tui/routes/session/tools.tsx
 
-   ✓ Explore Task — Inspect active task spacing"
+   ✓ Explore Task — Inspect active task spacing
+     ↳ 1 toolcall · 501ms"
 `;
