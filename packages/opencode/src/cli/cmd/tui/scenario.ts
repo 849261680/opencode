@@ -78,6 +78,10 @@ export function createScenario(input: { name: Name; directory: string; fetch: ty
       },
     ],
   }
+  const children = new Map([
+    [childID, child],
+    [completedChildID, completedChild],
+  ])
   const providers = [
     {
       id: "scenario",
@@ -143,19 +147,14 @@ export function createScenario(input: { name: Name; directory: string; fetch: ty
       if (request.method === "GET" && pathname === base) return json(scenario.session)
       if (request.method === "GET" && pathname === `${base}/message`) return json(scenario.transcript)
       if (request.method === "GET" && (pathname === `${base}/todo` || pathname === `${base}/diff`)) return json([])
-      if (request.method === "GET" && pathname === `/session/${childID}`) return json(child.session)
-      if (request.method === "GET" && pathname === `/session/${childID}/message`) return json(child.transcript)
+      const child = children.get(pathname.split("/")[2] ?? "")
+      if (request.method === "GET" && child && pathname === `/session/${child.session.id}`) return json(child.session)
+      if (request.method === "GET" && child && pathname === `/session/${child.session.id}/message`)
+        return json(child.transcript)
       if (
         request.method === "GET" &&
-        (pathname === `/session/${childID}/todo` || pathname === `/session/${childID}/diff`)
-      )
-        return json([])
-      if (request.method === "GET" && pathname === `/session/${completedChildID}`) return json(completedChild.session)
-      if (request.method === "GET" && pathname === `/session/${completedChildID}/message`)
-        return json(completedChild.transcript)
-      if (
-        request.method === "GET" &&
-        (pathname === `/session/${completedChildID}/todo` || pathname === `/session/${completedChildID}/diff`)
+        child &&
+        (pathname === `/session/${child.session.id}/todo` || pathname === `/session/${child.session.id}/diff`)
       )
         return json([])
       if (request.method === "POST" && pathname === `${base}/message`) {
@@ -189,8 +188,9 @@ export function createScenario(input: { name: Name; directory: string; fetch: ty
         case "/experimental/resource":
         case "/mcp":
         case "/provider/auth":
-        case "/session/status":
           return json({})
+        case "/session/status":
+          return json({ [childID]: { type: "busy" }, [completedChildID]: { type: "idle" } })
         case "/config/providers":
           return json({ providers, default: { scenario: "scenario" } })
         case "/experimental/console":
@@ -494,10 +494,10 @@ function responseParts(sessionID: string, messageID: string, prompt: string): Pa
         messageID,
         `${messageID}_07_task`,
         "task",
-        running(
-          { description: "Audit multiple active tasks adjacent to tools", subagent_type: "explore" },
-          "Delegating",
-          { sessionId: `${sessionID}_child` },
+        completed(
+          { description: "Audit background task while its child is active", subagent_type: "explore" },
+          { background: true, sessionId: `${sessionID}_child` },
+          "Audit background task while its child is active",
         ),
       ),
       task(

@@ -2199,11 +2199,14 @@ function Task(props: ToolProps<typeof TaskTool>) {
     tools().findLast((x) => (x.state.status === "running" || x.state.status === "completed") && x.state.title),
   )
 
-  const isRunning = createMemo(() => props.part.state.status === "running")
+  const status = createMemo(() => sync.data.session_status[props.metadata.sessionId ?? ""])
+  const isRunning = createMemo(
+    () => props.part.state.status === "running" || (props.metadata.background === true && status()?.type !== "idle"),
+  )
   const retry = createMemo(() => {
-    const status = sync.data.session_status[props.metadata.sessionId ?? ""]
-    if (status?.type !== "retry") return
-    return status
+    const value = status()
+    if (value?.type !== "retry") return
+    return value
   })
 
   const duration = createMemo(() => {
@@ -2231,7 +2234,7 @@ function Task(props: ToolProps<typeof TaskTool>) {
       } else content.push(`↳ ${tools().length} toolcalls`)
     }
 
-    if (props.part.state.status === "completed") {
+    if (!isRunning() && props.part.state.status === "completed") {
       content.push(
         props.metadata.background === true
           ? `↳ ${tools().length} toolcalls`
